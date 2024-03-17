@@ -1,93 +1,99 @@
 import {
-    $query,
-    $update,
-    Record,
-    StableBTreeMap,
-    Vec,
-    match,
-    Result,
-    nat64,
-    ic,
-    Opt,
-    Principal,
-  } from "azle";
-  import { v4 as uuidv4 } from "uuid";
-  
-  type Garden = Record<{
-    id: string;
-    name: string;
-    location: string;
-    owner: Principal;
-    plants: Vec<string>;
-    image: string;
-    createdAt: nat64;
-    updatedAt: Opt<nat64>;
-  }>;
-  
-  type GardenPayload = Record<{
-    name: string;
-    location: string;
-    plants: Vec<string>;
-    image: string;
-  }>;
-  
-  const gardenStorage = new StableBTreeMap<string, Garden>(0, 44, 1024);
-  
-  $update;
-  export function createGarden(payload: GardenPayload): Result<Garden, string> {
-    if (!payload.name || !payload.location || !payload.plants || !payload.image) {
-      // Payload Validation: Check if required fields in the payload are missing
-      return Result.Err<Garden, string>("Missing required fields in payload");
-    }
-  
-    const garden: Garden = {
-      id: uuidv4(),
-      createdAt: ic.time(),
-      updatedAt: Opt.None,
-      owner: ic.caller(),
-      name: payload.name,
-      location: payload.location,
-      plants: payload.plants,
-      image: payload.image,
-    };
-  
-    try {
-      // Error Handling: Handle potential errors during garden insertion
-      gardenStorage.insert(garden.id, garden);
-    } catch (error) {
-      return Result.Err<Garden, string>("Error occurred during garden insertion");
-    }
-  
+  $query,
+  $update,
+  Record,
+  StableBTreeMap,
+  Vec,
+  match,
+  Result,
+  nat64,
+  ic,
+  Opt,
+  Principal,
+} from "azle";
+import { v4 as uuidv4 } from "uuid";
+
+// Define types for Garden and GardenPayload
+type Garden = Record<{
+  id: string;
+  name: string;
+  location: string;
+  owner: Principal;
+  plants: Vec<string>;
+  image: string;
+  createdAt: nat64;
+  updatedAt: Opt<nat64>;
+}>;
+
+type GardenPayload = Record<{
+  name: string;
+  location: string;
+  plants: Vec<string>;
+  image: string;
+}>;
+
+// Define garden storage
+const gardenStorage = new StableBTreeMap<string, Garden>(0, 44, 1024);
+
+// Function to create a new garden
+$update;
+export function createGarden(payload: GardenPayload): Result<Garden, string> {
+  // Payload Validation
+  if (!payload.name || !payload.location || !payload.plants || !payload.image) {
+    return Result.Err<Garden, string>("Missing required fields in payload");
+  }
+
+  const garden: Garden = {
+    id: uuidv4(),
+    createdAt: ic.time(),
+    updatedAt: Opt.None,
+    owner: ic.caller(),
+    name: payload.name,
+    location: payload.location,
+    plants: payload.plants,
+    image: payload.image,
+  };
+
+  try {
+    // Insert garden into storage
+    gardenStorage.insert(garden.id, garden);
     return Result.Ok<Garden, string>(garden);
+  } catch (error) {
+    return Result.Err<Garden, string>("Error occurred during garden insertion");
   }
-  
-  $query;
-  export function getGarden(id: string): Result<Garden, string> {
-    if (!id) {
-      // Parameter Validation: Check if ID is invalid or missing
-      return Result.Err<Garden, string>(`Invalid id=${id}.`);
-    }
-  
-    try {
-      return match(gardenStorage.get(id), {
-        Some: (g) => Result.Ok<Garden, string>(g),
-        None: () => Result.Err<Garden, string>(`Garden with id=${id} not found.`),
-      });
-    } catch (error) {
-      return Result.Err<Garden, string>(`Error while retrieving garden with id ${id}`);
-    }
+}
+
+// Function to retrieve a garden by ID
+$query;
+export function getGarden(id: string): Result<Garden, string> {
+  // Parameter Validation
+  if (!id) {
+    return Result.Err<Garden, string>(`Invalid id=${id}.`);
   }
-  
-  $query;
-  export function getAllGardens(): Result<Vec<Garden>, string> {
-    try {
-      return Result.Ok(gardenStorage.values());
-    } catch (error) {
-      return Result.Err(`Failed to get all gardens: ${error}`);
-    }
+
+  try {
+    // Retrieve garden from storage
+    return match(gardenStorage.get(id), {
+      Some: (g) => Result.Ok<Garden, string>(g),
+      None: () => Result.Err<Garden, string>(`Garden with id=${id} not found.`),
+    });
+  } catch (error) {
+    return Result.Err<Garden, string>(`Error while retrieving garden with id ${id}`);
   }
-  
-  $update;
+}
+
+// Function to retrieve all gardens
+$query;
+export function getAllGardens(): Result<Vec<Garden>, string> {
+  try {
+    // Retrieve all gardens from storage
+    return Result.Ok(gardenStorage.values());
+  } catch (error) {
+    return Result.Err(`Failed to get all gardens: ${error}`);
+  }
+}
+
+ $update;
   export function updateGarden(id: string, payload: GardenPayload): Result<Garden, string> {
     if (!id) {
       // Parameter Validation: Check if ID is invalid or missing
