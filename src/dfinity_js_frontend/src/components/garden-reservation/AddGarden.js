@@ -1,19 +1,45 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
-import { Button, Modal, Form, FloatingLabel } from "react-bootstrap";
+import { Button, FloatingLabel, Form, Modal } from "react-bootstrap";
+import { LoadingButton } from "@mui/lab";
 
-const AddProduct = ({ save }) => {
-  const [title, setTitle] = useState("");
-  const [attachmentURL, setImage] = useState("");
+// import { stringToMicroAlgos } from "../../utils/conversions";
+
+const addGarden = ({ createNewGarden, loading }) => {
+  const [name, setName] = useState("");
+  const [imageUrl, setImage] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
-  const [price, setPrice] = useState(0);
-  const isFormFilled = () => title && attachmentURL && description && location && price;
+  const [pricePerPerson, setPrice] = useState(0);
+
+  const isFormFilled = useCallback(() => {
+    return name && imageUrl && description && location && pricePerPerson > 0;
+  }, [name, imageUrl, description, location, pricePerPerson]);
 
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
+  const [numInputs, setNumInputs] = useState(0);
+  const [plants, setPlants] = useState([]);
+
+  const handleInputChange = (event, index) => {
+    setPlants((prevInputs) => {
+      const updatedInputs = [...prevInputs];
+      updatedInputs[index] = event.target.value;
+      return updatedInputs;
+    });
+  };
+
+  const handleNumInputChange = (event) => {
+    const newNumInputs = parseInt(event.target.value, 10);
+    setNumInputs(newNumInputs);
+
+    // Ensure plants array has correct length
+    const updatedInputs = new Array(newNumInputs).fill("");
+    setPlants(updatedInputs);
+  };
 
   return (
     <>
@@ -27,21 +53,21 @@ const AddProduct = ({ save }) => {
       </Button>
       <Modal show={show} onHide={handleClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>New Product</Modal.Title>
+          <Modal.Title>New Garden</Modal.Title>
         </Modal.Header>
         <Form>
           <Modal.Body>
             <FloatingLabel
               controlId="inputName"
-              label="Product title"
+              label="Garden name"
               className="mb-3"
             >
               <Form.Control
                 type="text"
                 onChange={(e) => {
-                  setTitle(e.target.value);
+                  setName(e.target.value);
                 }}
-                placeholder="Enter title of product"
+                placeholder="Enter Garden name"
               />
             </FloatingLabel>
             <FloatingLabel
@@ -52,6 +78,7 @@ const AddProduct = ({ save }) => {
               <Form.Control
                 type="text"
                 placeholder="Image URL"
+                value={imageUrl}
                 onChange={(e) => {
                   setImage(e.target.value);
                 }}
@@ -66,19 +93,46 @@ const AddProduct = ({ save }) => {
                 as="textarea"
                 placeholder="description"
                 style={{ height: "80px" }}
+                max={115}
                 onChange={(e) => {
                   setDescription(e.target.value);
                 }}
               />
             </FloatingLabel>
+
+            <div className="apply-margin">
+              <label htmlFor="num-inputs">Number of Plants:</label>
+              <input
+                type="number"
+                id="num-inputs"
+                value={numInputs}
+                onChange={handleNumInputChange}
+                min={1}
+              />
+
+              {plants.map((input, index) => (
+                <div className="apply-margin" key={index}>
+                  <label htmlFor={`input-${index}`}>Plant {index + 1}:</label>
+                  <input
+                    type="text"
+                    id={`input-${index}`}
+                    value={input}
+                    onChange={(event) => handleInputChange(event, index)}
+                  />
+                </div>
+              ))}
+            </div>
+
             <FloatingLabel
               controlId="inputLocation"
               label="Location"
               className="mb-3"
             >
               <Form.Control
-                type="text"
-                placeholder="Location"
+                as="textarea"
+                placeholder="location"
+                style={{ height: "80px" }}
+                max={115}
                 onChange={(e) => {
                   setLocation(e.target.value);
                 }}
@@ -86,7 +140,7 @@ const AddProduct = ({ save }) => {
             </FloatingLabel>
             <FloatingLabel
               controlId="inputPrice"
-              label="Price"
+              label="Price Per Person in ICP"
               className="mb-3"
             >
               <Form.Control
@@ -107,17 +161,18 @@ const AddProduct = ({ save }) => {
             variant="dark"
             disabled={!isFormFilled()}
             onClick={() => {
-              save({
-                title,
-                attachmentURL,
+              createNewGarden({
+                name,
+                imageUrl,
                 description,
                 location,
-                price,
+                pricePerPerson,
+                plants,
               });
               handleClose();
             }}
           >
-            Save product
+            Save new Garden
           </Button>
         </Modal.Footer>
       </Modal>
@@ -125,8 +180,8 @@ const AddProduct = ({ save }) => {
   );
 };
 
-AddProduct.propTypes = {
-  save: PropTypes.func.isRequired,
+addGarden.propTypes = {
+  createNewGarden: PropTypes.func.isRequired,
 };
 
-export default AddProduct;
+export default addGarden;

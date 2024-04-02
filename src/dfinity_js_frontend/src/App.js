@@ -1,91 +1,77 @@
 import React, { useEffect, useCallback, useState } from "react";
 import { Container, Nav } from "react-bootstrap";
-import Products from "./components/marketplace/Products";
-import "./App.css";
+import "./App.css"; // Assuming this file contains necessary CSS adjustments
 import Wallet from "./components/Wallet";
-import coverImg from "./assets/img/sandwich.jpg";
+import coverImg from "./assets/img/garden.jpg";
+import bgImage from "./assets/img/garden2.jpg"; // Import the correct image
 import { login, logout as destroy } from "./utils/auth";
+import { getDfxAddress, balance as principalBalance } from "./utils/ledger";
 import Cover from "./components/utils/Cover";
 import { Notification } from "./components/utils/Notifications";
-import { isAuthenticated, getPrincipalText } from "./utils/auth";
-import { tokenBalance, tokenSymbol } from "./utils/icrc2_ledger";
-import { icpBalance } from "./utils/ledger";
-import { getAddressFromPrincipal } from "./utils/marketplace";
-
+import Gardens from "./components/garden-reservation/Gardens";
 
 const App = function AppWrapper() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [principal, setPrincipal] = useState('');
-  const [icrcBalance, setICRCBalance] = useState('');
-  const [balance, setICPBalance] = useState('');
-  const [symbol, setSymbol] = useState('');
-  const [address, setAddress] = useState('');
+  const isAuthenticated = window.auth.isAuthenticated;
+  const principal = window.auth.principalText;
 
-  const getICRCBalance = useCallback(async () => {
-    if (authenticated) {
-      setICRCBalance(await tokenBalance());
+  const [balance, setBalance] = useState("0");
+  const [address, setAddress] = useState("0");
+
+  const getBalance = useCallback(async () => {
+    if (isAuthenticated) {
+      setBalance(await principalBalance());
     }
-  });
+  }, []);
 
-  const getICPBalance = useCallback(async () => {
-    if (authenticated) {
-      setICPBalance(await icpBalance());
+  const getAddress = useCallback(async () => {
+    if (isAuthenticated) {
+      setAddress(await getDfxAddress());
     }
-  });
-
-  useEffect(async () => {
-    setSymbol(await tokenSymbol());
-  }, [setSymbol]);
-
-  useEffect(async () => {
-    setAuthenticated(await isAuthenticated());
-  }, [setAuthenticated]);
-
-  useEffect(async () => {
-    const principal = await getPrincipalText();
-    setPrincipal(principal);
-  }, [setPrincipal]);
-
-  useEffect(async () => {
-    const principal = await getPrincipalText();
-    const account = await getAddressFromPrincipal(principal);
-    setAddress(account.account);
-  }, [setAddress]);
+  }, []);
 
   useEffect(() => {
-    getICRCBalance();
-  }, [getICRCBalance]);
-
-  useEffect(() => {
-    getICPBalance();
-  }, [getICPBalance]);
+    getBalance();
+    getAddress();
+  }, [getBalance, getAddress]);
 
   return (
-    <>
-    <Notification />
-      {authenticated ? (
-        <Container fluid="md">
-          <Nav className="justify-content-end pt-3 pb-5">
-            <Nav.Item>
-              <Wallet
-                address={address}
-                principal={principal}
-                icpBalance={balance}
-                icrcBalance={icrcBalance}
-                symbol={symbol}
-                isAuthenticated={authenticated}
-                destroy={destroy}
-              />
-            </Nav.Item>
-          </Nav>
-          <main>
-            <Products tokenSymbol={symbol} />
-          </main>
-        </Container>
-      ) : (
-        <Cover name="Street Food" login={login} coverImg={coverImg} />
-      )}
-    </>
+    <div
+      style={{
+        backgroundImage: `url(${bgImage})`, // Use the imported image variable
+        backgroundRepeat: "no-repeat", // Consider adjusting repetition
+        backgroundSize: "cover", // Consider adjusting size
+        height: "100vh",
+      }}
+    >
+      <>
+        <Notification />
+        {isAuthenticated ? (
+          <Container fluid="md">
+            <Nav className="justify-content-end pt-3 pb-5">
+              <Nav.Item>
+                <Wallet
+                  principal={principal}
+                  dfxAddress={address}
+                  balance={balance}
+                  symbol={"ICP"}
+                  isAuthenticated={isAuthenticated}
+                  destroy={destroy}
+                />
+              </Nav.Item>
+            </Nav>
+            <main>
+              <Gardens fetchBalance={getBalance} />
+            </main>
+          </Container>
+        ) : (
+          <Cover
+            name={"Virtual Gardening Dapp"}
+            login={login}
+            coverImg={coverImg}
+          />
+        )}
+      </>
+    </div>
   );
 };
 

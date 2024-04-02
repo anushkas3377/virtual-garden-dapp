@@ -5,25 +5,27 @@ import "react-toastify/dist/ReactToastify.css";
 
 const Notification = () => (
   <ToastContainer
-    position="top-center"
-    autoClose={2000}
+    position="bottom-center"
+    autoClose={5000}
     hideProgressBar
     newestOnTop
     closeOnClick
     rtl={false}
+    pauseOnFocusLoss
     draggable={false}
+    pauseOnHover
   />
 );
 
 const NotificationSuccess = ({ text }) => (
-  <div>
+  <div style={{ width: "1000px !important" }}>
     <i className="bi bi-check-circle-fill text-success mx-2" />
     <span className="text-secondary mx-1">{text}</span>
   </div>
 );
 
 const NotificationError = ({ text }) => (
-  <div>
+  <div style={{ width: "1000px !important" }}>
     <i className="bi bi-x-circle-fill text-danger mx-2" />
     <span className="text-secondary mx-1">{text}</span>
   </div>

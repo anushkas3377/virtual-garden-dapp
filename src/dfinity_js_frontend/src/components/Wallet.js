@@ -1,9 +1,41 @@
 import React from "react";
 import { Dropdown, Stack } from "react-bootstrap";
-import { NotificationSuccess } from "./utils/Notifications";
-import { toast } from "react-toastify";
+import { truncateAddress } from "../utils/conversions";
+import { useState } from "react";
 
-const Wallet = ({ address, principal, icpBalance, icrcBalance, symbol, isAuthenticated, destroy }) => {
+const Wallet = ({
+  principal,
+  dfxAddress,
+  balance,
+  symbol,
+  isAuthenticated,
+  destroy,
+}) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  async function copyTextToClipboard(text) {
+    if ("clipboard" in navigator) {
+      return await navigator.clipboard.writeText(text);
+    } else {
+      return document.execCommand("copy", true, text);
+    }
+  }
+
+  const handleCopyClick = (text) => {
+    // Asynchronously call copyTextToClipboard
+    copyTextToClipboard(text)
+      .then(() => {
+        // If successful, update the isCopied state value
+        setIsCopied(true);
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 1000);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   if (isAuthenticated) {
     return (
       <>
@@ -14,32 +46,37 @@ const Wallet = ({ address, principal, icpBalance, icrcBalance, symbol, isAuthent
             id="dropdown-basic"
             className="d-flex align-items-center border rounded-pill py-1"
           >
-            {icrcBalance} <span className="ms-1"> {symbol}</span>
+            {isCopied ? (
+              "Copied..."
+            ) : (
+              <>
+                {balance} <span className="ms-1"> {symbol}</span>
+              </>
+            )}
           </Dropdown.Toggle>
 
           <Dropdown.Menu className="shadow-lg border-0">
             <Dropdown.Item>
               <Stack direction="horizontal" gap={2}>
-                <i className="bi bi-currency-dollar fs-4" />
-                <span className="font-monospace">ICP Balance: {icpBalance}</span>
-              </Stack>
-            </Dropdown.Item>
-
-            <Dropdown.Divider />
-
-            <Dropdown.Item onClick={() => { navigator.clipboard.writeText(principal); toast(<NotificationSuccess text="Copied principal" />) }}>
-              <Stack direction="horizontal" gap={2}>
                 <i className="bi bi-person-circle fs-4" />
-                <span className="font-monospace">Principal: {principal}</span>
+                Principal:
+                <span className="font-monospace">
+                  {truncateAddress(principal)}
+                </span>
               </Stack>
             </Dropdown.Item>
 
-            <Dropdown.Divider />
-
-            <Dropdown.Item onClick={() => { navigator.clipboard.writeText(address); toast(<NotificationSuccess text="Copied address" />) }}>
-              <Stack direction="horizontal" gap={2}>
+            <Dropdown.Item>
+              <Stack
+                direction="horizontal"
+                gap={2}
+                onClick={() => handleCopyClick(dfxAddress)}
+              >
                 <i className="bi bi-wallet2 fs-4" />
-                <span className="font-monospace">Address: {address}</span>
+                Address:
+                <span className="font-monospace">
+                  {truncateAddress(dfxAddress)}
+                </span>
               </Stack>
             </Dropdown.Item>
 

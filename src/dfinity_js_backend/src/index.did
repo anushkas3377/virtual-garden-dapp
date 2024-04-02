@@ -1,30 +1,17 @@
-type Garden = record {
-  id : text;
-  plants : vec text;
-  owner : principal;
-  name : text;
-  createdAt : nat64;
-  updatedAt : opt nat64;
-  image : text;
-  location : text;
-};
-type GardenPayload = record {
-  plants : vec text;
-  name : text;
-  image : text;
-  location : text;
-};
-type _AzleResult = variant { Ok : Garden; Err : text };
-type _AzleResult_1 = variant { Ok : vec Garden; Err : text };
-type _AzleResult_2 = variant { Ok : vec text; Err : text };
-service : () -> {
-  addPlantToGarden : (text, text) -> (_AzleResult);
-  createGarden : (GardenPayload) -> (_AzleResult);
-  deleteGarden : (text) -> (_AzleResult);
-  getAllGardens : () -> (_AzleResult_1) query;
-  getGarden : (text) -> (_AzleResult) query;
-  listPlantsInGarden : (text) -> (_AzleResult_2) query;
-  removePlantFromGarden : (text, text) -> (_AzleResult);
-  updateGarden : (text, GardenPayload) -> (_AzleResult);
-  updateGardenImage : (text, text) -> (_AzleResult);
+service: (record {reservationFee:nat64}) -> {
+    addGarden: (record {plants:vec text; name:text; pricePerPerson:nat64; description:text; imageUrl:text; location:text}) -> (variant {Ok:record {id:text; creator:principal; plants:vec text; name:text; isAvailable:bool; pricePerPerson:nat64; currentReservationEnds:opt nat64; description:text; imageUrl:text; currentReservedTo:opt principal; isReserved:bool; location:text}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}});
+    completeReservation: (text, nat64, nat64, nat64) -> (variant {Ok:record {status:variant {PaymentPending:text; Completed:text}; gardenId:text; memo:nat64; payer:principal; amount:nat64; paid_at_block:opt nat64; noOfPersons:nat64}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}});
+    createReservationOrder: (text, nat64) -> (variant {Ok:record {status:variant {PaymentPending:text; Completed:text}; gardenId:text; memo:nat64; payer:principal; amount:nat64; paid_at_block:opt nat64; noOfPersons:nat64}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}});
+    deleteGarden: (text) -> (variant {Ok:text; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}});
+    endReservation: (text) -> (variant {Ok:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}});
+    getAddressFromPrincipal: (principal) -> (text) query;
+    getBookings: () -> (vec record {status:variant {PaymentPending:text; Completed:text}; gardenId:text; memo:nat64; payer:principal; amount:nat64; paid_at_block:opt nat64; noOfPersons:nat64}) query;
+    getCanisterAddress: () -> (text) query;
+    getGarden: (text) -> (variant {Ok:record {id:text; creator:principal; plants:vec text; name:text; isAvailable:bool; pricePerPerson:nat64; currentReservationEnds:opt nat64; description:text; imageUrl:text; currentReservedTo:opt principal; isReserved:bool; location:text}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}}) query;
+    getGardenByLocation: (nat64) -> (variant {Ok:vec record {id:text; creator:principal; plants:vec text; name:text; isAvailable:bool; pricePerPerson:nat64; currentReservationEnds:opt nat64; description:text; imageUrl:text; currentReservedTo:opt principal; isReserved:bool; location:text}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}}) query;
+    getGardenByName: (nat64) -> (variant {Ok:vec record {id:text; creator:principal; plants:vec text; name:text; isAvailable:bool; pricePerPerson:nat64; currentReservationEnds:opt nat64; description:text; imageUrl:text; currentReservedTo:opt principal; isReserved:bool; location:text}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}}) query;
+    getGardenByPrice: (nat64) -> (variant {Ok:vec record {id:text; creator:principal; plants:vec text; name:text; isAvailable:bool; pricePerPerson:nat64; currentReservationEnds:opt nat64; description:text; imageUrl:text; currentReservedTo:opt principal; isReserved:bool; location:text}; Err:variant {PaymentFailed:text; InvalidPayload:text; NotFound:text; NotBooked:text; Booked:text; NotOwner:text; PaymentCompleted:text}}) query;
+    getGardens: () -> (vec record {id:text; creator:principal; plants:vec text; name:text; isAvailable:bool; pricePerPerson:nat64; currentReservationEnds:opt nat64; description:text; imageUrl:text; currentReservedTo:opt principal; isReserved:bool; location:text}) query;
+    getPendings: () -> (vec record {status:variant {PaymentPending:text; Completed:text}; gardenId:text; memo:nat64; payer:principal; amount:nat64; paid_at_block:opt nat64; noOfPersons:nat64}) query;
+    getReservationFee: () -> (nat64) query;
 }
